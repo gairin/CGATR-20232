@@ -13,8 +13,8 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLM/gtc/type_ptr.hpp>
 
-void resize(GLFWwindow* window, int width, int height) {};
-void errorLog(int cod, const char* description) {};
+//void resize(GLFWwindow* window, int width, int height) {};
+//void errorLog(int cod, const char* description) {};
 
 // Protótipos de função
 GLuint genTriangle();
