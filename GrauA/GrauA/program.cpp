@@ -1,7 +1,9 @@
+// Bibliotecas do C++
 #include <stdio.h>
 #include <iostream>
 #include <string>
 #include <assert.h>
+#include <filesystem>
 
 // GLEW e GLFW
 #include <GL/glew.h>
@@ -11,6 +13,13 @@
 #include <GLM/glm.hpp>
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLM/gtc/type_ptr.hpp>
+
+// Classes
+#include "ObjReader.h";
+#include "Obj3D.h";
+#include "Mesh.h";
+
+using namespace std;
 
 int main() {
     // Inicialização da GLFW
@@ -94,7 +103,7 @@ int main() {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-
+    /*
     // Cubo para testar a cena
     GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
@@ -139,6 +148,16 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    */
+
+    // Ler o asset 3D
+    ObjReader objReader;
+    Obj3D* mesa = new Obj3D();
+
+    Mesh* mesh = objReader.read(R"(C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\Assets\3D models\mesa\mesa\mesa1.obj)");
+    mesa->setMesh(mesh);
+    // identidade placeholder
+    mesa->setTransform(glm::mat4(1));
 
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
@@ -197,5 +216,6 @@ int main() {
 
     glfwTerminate();
 
+    delete mesa;
     return 0;
 }

@@ -12,4 +12,5 @@ private:
 public:
     Mesh();
     ~Mesh();
+    void addVertices(float x, float y, float z);
 };

@@ -13,4 +13,7 @@ private:
 public:
 	Obj3D();
 	~Obj3D();
+	Mesh* getMesh();
+	void setMesh(Mesh* mesh);
+	void setTransform(glm::mat4 t);
 };

@@ -3,14 +3,23 @@
 #include <string>
 #include <sstream>
 
+#include "ObjReader.h"
 #include "Mesh.h"
 #include "Group.h"
+#include "Face.h"
+#include "Material.h"
 
 using namespace std;
 
-Mesh* read(string filename) {
+ObjReader::ObjReader() { }
+
+ObjReader::~ObjReader() { }
+
+Mesh* ObjReader::read(string filename) {
     Mesh* mesh = new Mesh;
-    Group* g_atual = new Group;
+    Group* group = new Group;
+    Face* face = new Face;
+    Material* mat = new Material;
 
     ifstream arq(filename);
     if (!arq) {
@@ -27,6 +36,29 @@ Mesh* read(string filename) {
         if (temp == "v") {
             float x, y, z;
             sline >> x >> y >> z;
+
+            mesh->addVertices(x, y, z);
+        }
+
+        else if (temp == "g") {
+            string groupName;
+            sline >> groupName;
+
+            group->setName(groupName);
+        }
+
+        else if (temp == "mtl") {
+            string mtlName;
+            sline >> mtlName;
+
+            mat->setMtlName(mtlName);
+        }
+        
+        else if (temp == "f") {
+            // terminar depois
+            float x, y, z;
+            sline >> x, y, z;
+
         }
     }
 
