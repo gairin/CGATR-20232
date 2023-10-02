@@ -30,7 +30,7 @@ int main() {
     const GLuint WIDTH = 800;
     const GLuint HEIGHT = 600;
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Classe Modelagem", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Grau A", NULL, NULL);
 
     if (!window) {
         glfwTerminate();
@@ -103,7 +103,7 @@ int main() {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    /*
+  
     // Cubo para testar a cena
     GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
@@ -148,9 +148,10 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    */
+   
 
     // Ler o asset 3D
+    /*
     ObjReader objReader;
     Obj3D* mesa = new Obj3D();
 
@@ -158,7 +159,7 @@ int main() {
     mesa->setMesh(mesh);
     // identidade placeholder
     mesa->setTransform(glm::mat4(1));
-
+    */
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // direção
@@ -216,6 +217,6 @@ int main() {
 
     glfwTerminate();
 
-    delete mesa;
+    //delete mesa;
     return 0;
 }

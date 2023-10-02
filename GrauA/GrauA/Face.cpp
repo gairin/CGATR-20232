@@ -4,6 +4,10 @@ Face::Face() {
 
 }
 
+Face::~Face() {
+
+}
+
 void Face::addVertice(int v) {
 	this->vertice.push_back(v);
 }
