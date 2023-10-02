@@ -17,4 +17,5 @@ public:
 	~Group();
 	void setName(string name);
 	void setMaterial(string material);
+	void addFaces(Face* face);
 };

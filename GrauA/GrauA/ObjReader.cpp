@@ -16,10 +16,9 @@ ObjReader::ObjReader() { }
 ObjReader::~ObjReader() { }
 
 Mesh* ObjReader::read(string filename) {
-    Mesh* mesh = new Mesh;
-    Group* group = new Group;
-    Face* face = new Face;
-    Material* mat = new Material;
+    Mesh* mesh = new Mesh; // malha do objeto
+    Group* group = new Group(); // grupo atual
+    Material* mat = new Material(); // material atual
 
     ifstream arq(filename);
     if (!arq) {
@@ -30,37 +29,79 @@ Mesh* ObjReader::read(string filename) {
     string line;
     while (getline(arq, line)) {
         stringstream sline(line);
-        string temp;
-        sline >> temp;
+        string token;
+        sline >> token;
 
-        if (temp == "v") {
+        if (token == "v") {
             float x, y, z;
             sline >> x >> y >> z;
 
             mesh->addVertices(x, y, z);
         }
 
-        else if (temp == "g") {
+        else if (token == "vn") {
+            float x, y, z;
+            sline >> x >> y >> z;
+
+            mesh->addNormals(x, y, z);
+        }
+        
+        else if (token == "vt") {
+            float x, y, z;
+            sline >> x >> y >> z;
+
+            mesh->addTexCoords(x, y, z);
+        }
+
+        else if (token == "g") {
             string groupName;
             sline >> groupName;
 
             group->setName(groupName);
+            mesh->addGroup(group);
         }
 
-        else if (temp == "mtl") {
+        else if (token == "mtl") {
             string mtlName;
             sline >> mtlName;
 
             mat->setMtlName(mtlName);
+            group->setMaterial(mtlName);
         }
-        
-        else if (temp == "f") {
-            // terminar depois
-            float x, y, z;
-            sline >> x, y, z;
 
+        else if (token == "f") {
+            string faceData;
+            while (sline >> faceData) {
+                Face* face = new Face();
+
+                stringstream ss(faceData);
+                string vs, ts, ns;
+
+                getline(ss, vs, '/');
+                getline(ss, ts, '/');
+                getline(ss, ns, '/');
+
+                int v = stoi(vs) - 1;
+                face->addVertice(v);
+
+                int t = ts != "" ? stoi(ts) - 1 : -1;
+                int n = ns != "" ? stoi(ns) - 1 : -1;
+
+                if (t > 0) {
+                    face->addTexCoord(t);
+                }
+
+                if (n > 0) {
+                    face->addNormal(n);
+                }
+
+                group->addFaces(face);
+                delete face;
+            }
         }
     }
+
+    arq.close();
 
     return mesh;
 }

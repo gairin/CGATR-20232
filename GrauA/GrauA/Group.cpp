@@ -2,8 +2,12 @@
 
 using namespace std;
 
-Group::Group(string name, string material) {
-    
+Group::Group() {
+
+}
+
+Group::~Group() {
+
 }
 
 void Group::setName(string name) {
@@ -12,4 +16,8 @@ void Group::setName(string name) {
 
 void Group::setMaterial(string material) {
     this->material = material;
+}
+
+void Group::addFaces(Face* face) {
+    this->faces.push_back(face);
 }
