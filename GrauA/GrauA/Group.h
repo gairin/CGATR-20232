@@ -18,4 +18,5 @@ public:
 	void setName(string name);
 	void setMaterial(string material);
 	void addFaces(Face* face);
+	vector<Face*> getFaces();
 };

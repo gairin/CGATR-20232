@@ -8,5 +8,5 @@ class ObjReader {
 public:
 	ObjReader();
 	~ObjReader();
-	Mesh* read(string filename);
+	Mesh* read(string content);
 };

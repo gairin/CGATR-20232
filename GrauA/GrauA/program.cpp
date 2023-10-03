@@ -1,9 +1,12 @@
 // Bibliotecas do C++
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <assert.h>
 #include <filesystem>
+#include <vector>
 
 // GLEW e GLFW
 #include <GL/glew.h>
@@ -20,6 +23,17 @@
 #include "Mesh.h";
 
 using namespace std;
+
+string loadAssets();
+
+struct objects {
+    string name;
+    string content;
+};
+
+vector<objects> assets;
+
+// Protótipos de função
 
 int main() {
     // Inicialização da GLFW
@@ -53,7 +67,7 @@ int main() {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
     
-    // Shaders
+    // Shaders (colocar em arquivo separado depois se possível)
     const char* vertex_shader =
         "#version 460\n"
         "layout(location=0) in vec3 vp;"
@@ -149,17 +163,39 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
    
-
     // Ler o asset 3D
-    /*
     ObjReader objReader;
-    Obj3D* mesa = new Obj3D();
+    Obj3D* pyramid = new Obj3D();
 
-    Mesh* mesh = objReader.read(R"(C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\Assets\3D models\mesa\mesa\mesa1.obj)");
-    mesa->setMesh(mesh);
+    Mesh* mesh = objReader.read(loadAssets());
+    pyramid->setMesh(mesh);
     // identidade placeholder
-    mesa->setTransform(glm::mat4(1));
-    */
+    pyramid->setTransform(glm::mat4(1));
+
+    // Leitura dos dados
+    for (Group* g : mesh->getGroups()) {
+        vector<float> vertices;
+        vector<float> texCoords;
+        vector<float> normals;
+
+        /* Resumir depois
+        for (Face* f : g->getFaces()) {
+            for (i : 0 to f->numVertices) {
+                v = mesh->verts[f->verts[i]];
+                vs.push_back(v.x);
+                vs.push_back(v.y);
+                vs.push_back(v.z);
+                vt = mesh->texts[f->texts[i]];
+                vts.push_back(vt.x);
+                vts.push_back(vt.y);
+                vn = mesh->norms[f->norms[i]];
+                vns.push_back(vn.x);
+                vns.push_back(vn.y);
+                vns.push_back(vn.z);
+            }
+        }*/
+    }
+
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // direção
@@ -173,10 +209,10 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Processa eventos e atualiza a câmera
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
+        // Se possível fazer a câmera mover com o mouse
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPosition += cameraSpeed * cameraFront;
         }
@@ -219,4 +255,26 @@ int main() {
 
     //delete mesa;
     return 0;
+}
+
+string loadAssets() {
+    // Por enquanto, caminho absoluto para testar depois melhoro isso
+    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
+    ifstream inputFile;
+
+    inputFile.open(filePath);
+
+    if (!inputFile.is_open()) {
+        return "";
+    }
+
+    string content;
+    std::string line;
+
+    while (std::getline(inputFile, line)) {
+        content += line + "\n";
+    }
+
+    inputFile.close();
+    return content;
 }

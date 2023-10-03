@@ -21,3 +21,7 @@ void Group::setMaterial(string material) {
 void Group::addFaces(Face* face) {
     this->faces.push_back(face);
 }
+
+vector<Face*> Group::getFaces() {
+    return this->faces;
+}

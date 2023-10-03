@@ -1,9 +1,11 @@
 #include "Mesh.h"
 
+using namespace std;
+
 Mesh::Mesh() {
-    std::string mtllib;
+    string mtllib;
     glm::vec3 min, max;
-    std::vector<glm::vec3*> vertices;
+    vector<glm::vec3*> vertices;
 }
 
 Mesh::~Mesh() {
@@ -11,6 +13,10 @@ Mesh::~Mesh() {
         delete vertex;
     }
     vertices.clear();
+}
+
+void Mesh::setMtllib(string mtllib) {
+    this->mtllib = mtllib;
 }
 
 void Mesh::addVertices(float x, float y, float z) {
@@ -27,4 +33,8 @@ void Mesh::addNormals(float x, float y, float z) {
 
 void Mesh::addGroup(Group* group) {
     this->groups.push_back(group);
+}
+
+vector<Group*> Mesh::getGroups() {
+    return this->groups;
 }

@@ -5,20 +5,24 @@
 
 #include "Group.h"
 
+using namespace std;
+
 class Mesh {
 private:
-    std::string mtllib;
+    string mtllib;
     glm::vec3 min, max;
-    std::vector<glm::vec3*> vertices;
-    std::vector<glm::vec3*> texCoords;
-    std::vector<glm::vec3*> normals;
-    std::vector<Group*> groups;
+    vector<glm::vec3*> vertices;
+    vector<glm::vec3*> texCoords;
+    vector<glm::vec3*> normals;
+    vector<Group*> groups;
 
 public:
     Mesh();
     ~Mesh();
+    void setMtllib(string mtllib);
     void addVertices(float x, float y, float z);
     void addTexCoords(float x, float y, float z);
     void addNormals(float x, float y, float z);
     void addGroup(Group* group);
+    vector<Group*> getGroups();
 };

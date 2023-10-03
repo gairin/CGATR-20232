@@ -15,19 +15,15 @@ ObjReader::ObjReader() { }
 
 ObjReader::~ObjReader() { }
 
-Mesh* ObjReader::read(string filename) {
+Mesh* ObjReader::read(string content) {
     Mesh* mesh = new Mesh; // malha do objeto
     Group* group = new Group(); // grupo atual
     Material* mat = new Material(); // material atual
 
-    ifstream arq(filename);
-    if (!arq) {
-        cerr << "Erro ao abrir o arquivo." << endl;
-        return nullptr;
-    }
+    stringstream data(content);
 
     string line;
-    while (getline(arq, line)) {
+    while (getline(data, line)) {
         stringstream sline(line);
         string token;
         sline >> token;
@@ -61,7 +57,14 @@ Mesh* ObjReader::read(string filename) {
             mesh->addGroup(group);
         }
 
-        else if (token == "mtl") {
+        else if (token == "usemtl") {
+            string mtllib;
+            sline >> mtllib;
+
+            mesh->setMtllib(mtllib);
+
+        }
+        else if (token == "usemtl") {
             string mtlName;
             sline >> mtlName;
 
@@ -100,8 +103,6 @@ Mesh* ObjReader::read(string filename) {
             }
         }
     }
-
-    arq.close();
 
     return mesh;
 }
