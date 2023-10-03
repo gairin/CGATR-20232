@@ -18,6 +18,7 @@ ObjReader::~ObjReader() { }
 Mesh* ObjReader::read(string content) {
     Mesh* mesh = new Mesh; // malha do objeto
     Group* group = new Group(); // grupo atual
+    bool firstGroup = true;
     Material* mat = new Material(); // material atual
 
     stringstream data(content);
@@ -50,20 +51,34 @@ Mesh* ObjReader::read(string content) {
         }
 
         else if (token == "g") {
-            string groupName;
-            sline >> groupName;
+            if (firstGroup) {
+                string groupName;
+                sline >> groupName;
+                group->setName(groupName);
 
-            group->setName(groupName);
-            mesh->addGroup(group);
+                firstGroup = false;
+            }
+
+            else {
+                mesh->addGroup(group);
+
+                group = new Group();
+
+                string groupName;
+                sline >> groupName;
+                
+                group->setName(groupName);
+                mesh->addGroup(group);
+            }
         }
 
-        else if (token == "usemtl") {
+        else if (token == "mtllib") {
             string mtllib;
             sline >> mtllib;
 
             mesh->setMtllib(mtllib);
-
         }
+
         else if (token == "usemtl") {
             string mtlName;
             sline >> mtlName;
@@ -73,10 +88,10 @@ Mesh* ObjReader::read(string content) {
         }
 
         else if (token == "f") {
+            Face* face = new Face();
             string faceData;
-            while (sline >> faceData) {
-                Face* face = new Face();
 
+            while (sline >> faceData) {
                 stringstream ss(faceData);
                 string vs, ts, ns;
 
@@ -90,19 +105,19 @@ Mesh* ObjReader::read(string content) {
                 int t = ts != "" ? stoi(ts) - 1 : -1;
                 int n = ns != "" ? stoi(ns) - 1 : -1;
 
-                if (t > 0) {
+                if (t >= 0) {
                     face->addTexCoord(t);
                 }
 
-                if (n > 0) {
+                if (n >= 0) {
                     face->addNormal(n);
                 }
-
-                group->addFaces(face);
-                delete face;
             }
+
+            group->addFaces(face);
         }
     }
 
+    mesh->addGroup(group);
     return mesh;
 }

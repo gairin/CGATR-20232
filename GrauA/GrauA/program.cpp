@@ -18,9 +18,9 @@
 #include <GLM/gtc/type_ptr.hpp>
 
 // Classes
-#include "ObjReader.h";
-#include "Obj3D.h";
-#include "Mesh.h";
+#include "ObjReader.h"
+#include "Obj3D.h"
+#include "Mesh.h"
 
 using namespace std;
 
@@ -66,7 +66,7 @@ int main() {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
-    
+
     // Shaders (colocar em arquivo separado depois se possível)
     const char* vertex_shader =
         "#version 460\n"
@@ -117,7 +117,7 @@ int main() {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-  
+
     // Cubo para testar a cena
     GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
@@ -162,7 +162,7 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-   
+
     // Ler o asset 3D
     ObjReader objReader;
     Obj3D* pyramid = new Obj3D();
@@ -178,24 +178,25 @@ int main() {
         vector<float> texCoords;
         vector<float> normals;
 
-        /* Resumir depois
         for (Face* f : g->getFaces()) {
-            for (i : 0 to f->numVertices) {
-                v = mesh->verts[f->verts[i]];
-                vs.push_back(v.x);
-                vs.push_back(v.y);
-                vs.push_back(v.z);
-                vt = mesh->texts[f->texts[i]];
-                vts.push_back(vt.x);
-                vts.push_back(vt.y);
-                vn = mesh->norms[f->norms[i]];
-                vns.push_back(vn.x);
-                vns.push_back(vn.y);
-                vns.push_back(vn.z);
-            }
-        }*/
-    }
+            for (int i = 0; i < f->getVertices().size(); i++) {
+                glm::vec3 v = mesh->getVertices()[f->getVertices()[i]];
+                vertices.push_back(v.x);
+                vertices.push_back(v.y);
+                vertices.push_back(v.z);
 
+                glm::vec3 tc = mesh->getTexCoords()[f->getTexCoords()[i]];
+                texCoords.push_back(tc.x);
+                texCoords.push_back(tc.y);
+
+                glm::vec3 n = mesh->getNormals()[f->getNormals()[i]];
+                normals.push_back(n.x);
+                normals.push_back(n.y);
+                normals.push_back(n.z);
+            }
+        }
+    }
+        
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // direção
@@ -237,6 +238,10 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             yaw += cameraRotationSpeed;
         }
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        }
 
         cameraFront.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
         cameraFront.y = sin(glm::radians(pitch));
@@ -252,10 +257,9 @@ int main() {
     }
 
     glfwTerminate();
-
     //delete mesa;
     return 0;
-}
+};
 
 string loadAssets() {
     // Por enquanto, caminho absoluto para testar depois melhoro isso
@@ -277,4 +281,4 @@ string loadAssets() {
 
     inputFile.close();
     return content;
-}
+};

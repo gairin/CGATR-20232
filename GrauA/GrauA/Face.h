@@ -5,9 +5,9 @@ using namespace std;
 
 class Face {
 private:
-	vector<int> vertice;
-	vector<int> texCoord;
-	vector<int> normal;
+	vector<int> vertices;
+	vector<int> texCoords;
+	vector<int> normals;
 
 public:
 	Face();
@@ -15,4 +15,7 @@ public:
 	void addVertice(int v);
 	void addTexCoord(int t);
 	void addNormal(int n);
+	vector<int> getVertices();
+	vector<int> getTexCoords();
+	vector<int> getNormals();
 };
