@@ -1,3 +1,4 @@
-﻿  ObjReader.cpp
+﻿  program.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\include\filesystem(13): warning STL4038: The contents of <filesystem> are available only with C++17 or later.
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflita com uso de outras bibliotecas; use /NODEFAULTLIB:library
   GrauA.vcxproj -> C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\x64\Debug\GrauA.exe

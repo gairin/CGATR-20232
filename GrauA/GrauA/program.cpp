@@ -26,12 +26,7 @@ using namespace std;
 
 string loadAssets();
 
-struct objects {
-    string name;
-    string content;
-};
-
-vector<objects> assets;
+vector<Obj3D> objects;
 
 // Protótipos de função
 
@@ -70,23 +65,23 @@ int main() {
     // Shaders (colocar em arquivo separado depois se possível)
     const char* vertex_shader =
         "#version 460\n"
-        "layout(location=0) in vec3 vp;"
-        "layout(location=1) in vec3 vc;"
+        "layout(location=0) in vec3 vertexPosition;"
+        "layout(location=1) in vec3 vertexColor;"
         "uniform mat4 model;"
         "uniform mat4 view;"
         "uniform mat4 projection;"
-        "out vec3 color;"
-        "void main () {"
-        "   color = vc;"
-        "   gl_Position = projection * view * model * vec4(vp, 1.0);"
+        "out vec3 fragColor;"
+        "void main() {"
+        "   gl_Position = projection * view * model * vec4(vertexPosition, 1.0);"
+        "   fragColor = vertexColor;"
         "}";
 
     const char* fragment_shader =
         "#version 460\n"
-        "in vec3 color;"
+        "in vec3 fragColor;"
         "out vec4 frag_color;"
-        "void main () {"
-        "   frag_color = vec4(color, 1.0);"
+        "void main() {"
+        "   frag_color = vec4(fragColor, 1.0);"
         "}";
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -117,6 +112,7 @@ int main() {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
 
     // Cubo para testar a cena
     GLfloat vertices[] = {
@@ -155,13 +151,14 @@ int main() {
     // layout 0 = vértices
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // layou 1 = cor
+    /*
+    // layout 1 = cor
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
+    */
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
 
     // Ler o asset 3D
     ObjReader objReader;
@@ -169,14 +166,30 @@ int main() {
 
     Mesh* mesh = objReader.read(loadAssets());
     pyramid->setMesh(mesh);
-    // identidade placeholder
-    pyramid->setTransform(glm::mat4(1));
 
     // Leitura dos dados
+    int vertNum = 0;
     for (Group* g : mesh->getGroups()) {
-        vector<float> vertices;
-        vector<float> texCoords;
-        vector<float> normals;
+        vector<GLfloat> vertices;
+        vector<GLfloat> texCoords;
+        vector<GLfloat> normals;
+
+        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
+        GLuint gVertVAO, gTexCoordsVAO, gNormalsVAO;
+
+        glGenVertexArrays(1, &gVertVAO);
+        glGenBuffers(1, &gVertVBO);
+        glGenVertexArrays(1, &gTexCoordsVAO);
+        glGenBuffers(1, &gTexCoordsVBO);
+        glGenVertexArrays(1, &gNormalsVAO);
+        glGenBuffers(1, &gNormalsVBO);
+
+        glBindVertexArray(gVertVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
+        glBindVertexArray(gTexCoordsVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, gTexCoordsVBO);
+        glBindVertexArray(gNormalsVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, gNormalsVBO);
 
         for (Face* f : g->getFaces()) {
             for (int i = 0; i < f->getVertices().size(); i++) {
@@ -184,8 +197,9 @@ int main() {
                 vertices.push_back(v.x);
                 vertices.push_back(v.y);
                 vertices.push_back(v.z);
+                vertNum++;
 
-                glm::vec3 tc = mesh->getTexCoords()[f->getTexCoords()[i]];
+                glm::vec2 tc = mesh->getTexCoords()[f->getTexCoords()[i]];
                 texCoords.push_back(tc.x);
                 texCoords.push_back(tc.y);
 
@@ -195,8 +209,24 @@ int main() {
                 normals.push_back(n.z);
             }
         }
+
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(0);
+        glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(GLfloat), texCoords.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(1);
+        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(2);
+
+        glBindVertexArray(0);
+
+        g->setVertVAO(gVertVAO);
+        g->setTexCoordVAO(gTexCoordsVAO);
+        g->setNormVAO(gNormalsVAO);
     }
-        
+
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // direção
@@ -212,6 +242,25 @@ int main() {
 
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+        for (Group* g : mesh->getGroups()) {
+            glUseProgram(shader_programme);
+
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+            glBindVertexArray(g->getVertVAO());
+            glDrawArrays(GL_TRIANGLES, 0, vertNum);
+
+            glBindVertexArray(0);
+
+            glUseProgram(0);
+        }
+
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
         // Se possível fazer a câmera mover com o mouse
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -248,16 +297,12 @@ int main() {
         cameraFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
         cameraFront = glm::normalize(cameraFront);
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     glfwTerminate();
-    //delete mesa;
     return 0;
 };
 
