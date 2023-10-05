@@ -21,6 +21,7 @@
 #include "ObjReader.h"
 #include "Obj3D.h"
 #include "Mesh.h"
+#include "Material.h"
 
 using namespace std;
 
@@ -113,83 +114,24 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-
-    // Cubo para testar a cena
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 0.5f, 0.5f, 0.5f
-    };
-
-    GLuint indices[] = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4,
-        0, 3, 7, 7, 4, 0,
-        1, 2, 6, 6, 5, 1,
-        2, 3, 7, 7, 6, 2,
-        0, 1, 5, 5, 4, 0
-    };
-
-    GLuint VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // layout 0 = vértices
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    /*
-    // layout 1 = cor
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    */
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-
     // Ler o asset 3D
     ObjReader objReader;
     Obj3D* pyramid = new Obj3D();
 
     Mesh* mesh = objReader.read(loadAssets());
     pyramid->setMesh(mesh);
-
-    // Leitura dos dados
     int vertNum = 0;
+
     for (Group* g : mesh->getGroups()) {
         vector<GLfloat> vertices;
         vector<GLfloat> texCoords;
         vector<GLfloat> normals;
 
-        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
-        GLuint gVertVAO, gTexCoordsVAO, gNormalsVAO;
-
-        glGenVertexArrays(1, &gVertVAO);
+        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO, VAO;
         glGenBuffers(1, &gVertVBO);
-        glGenVertexArrays(1, &gTexCoordsVAO);
         glGenBuffers(1, &gTexCoordsVBO);
-        glGenVertexArrays(1, &gNormalsVAO);
         glGenBuffers(1, &gNormalsVBO);
-
-        glBindVertexArray(gVertVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
-        glBindVertexArray(gTexCoordsVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gTexCoordsVBO);
-        glBindVertexArray(gNormalsVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gNormalsVBO);
+        glGenVertexArrays(1, &VAO);
 
         for (Face* f : g->getFaces()) {
             for (int i = 0; i < f->getVertices().size(); i++) {
@@ -220,11 +162,9 @@ int main() {
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(2);
 
+        glBindVertexArray(VAO);
+        g->setVAO(VAO);
         glBindVertexArray(0);
-
-        g->setVertVAO(gVertVAO);
-        g->setTexCoordVAO(gTexCoordsVAO);
-        g->setNormVAO(gNormalsVAO);
     }
 
     // Variáveis para controlar a câmera
@@ -243,24 +183,21 @@ int main() {
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
+        pyramid->setTransform(viewMatrix);
+
+        GLint loc = glGetUniformLocation(shader_programme, "model");
+        glUniformMatrix4fv(loc, 1, GL_FALSE,
+                           glm::value_ptr(pyramid->getTransform()));
+
         for (Group* g : mesh->getGroups()) {
-            glUseProgram(shader_programme);
-
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-
-            glBindVertexArray(g->getVertVAO());
-            glDrawArrays(GL_TRIANGLES, 0, vertNum);
-
-            glBindVertexArray(0);
+            
+            glBindVertexArray(g->getVAO());
+            //Material* material = getMaterial(g->getMaterial());
+            //glBindTexture(GL_TEXTURE_2D, material->tid);
+            glDrawArrays(GL_TRIANGLES, 0, g->numVertices);
 
             glUseProgram(0);
         }
-
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
 
         // Se possível fazer a câmera mover com o mouse
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {

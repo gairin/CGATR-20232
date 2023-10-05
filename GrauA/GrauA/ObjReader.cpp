@@ -115,6 +115,7 @@ Mesh* ObjReader::read(string content) {
             }
 
             group->addFaces(face);
+            group->numVertices++;
         }
     }
 

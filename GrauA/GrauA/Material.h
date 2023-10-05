@@ -11,4 +11,5 @@ public:
 	Material();
 	~Material();
 	void setMtlName(string name);
+	string getMtlName();
 };

@@ -3,7 +3,7 @@
 using namespace std;
 
 Group::Group() {
-
+    this->numVertices = 0;
 }
 
 Group::~Group() {
@@ -18,6 +18,10 @@ void Group::setMaterial(string material) {
     this->material = material;
 }
 
+string Group::getMaterial() {
+    return this->material;
+}
+
 void Group::addFaces(Face* face) {
     this->faces.push_back(face);
 }
@@ -26,26 +30,10 @@ vector<Face*> Group::getFaces() {
     return this->faces;
 }
 
-void Group::setVertVAO(GLuint vao) {
-    this->vertVAO = vao;
-}
+void Group::setVAO(GLuint vao) {
+    this->VAO = vao;
+};
 
-GLuint Group::getVertVAO() {
-    return this->vertVAO;
-}
-
-void Group::setTexCoordVAO(GLuint vao) {
-    this->texCoordVAO = vao;
-}
-
-GLuint Group::getTexCoordVAO() {
-    return this->texCoordVAO;
-}
-
-void Group::setNormVAO(GLuint vao) {
-    this->normVAO = vao;
-}
-
-GLuint Group::getNormVAO() {
-    return this->normVAO;
-}
+GLuint Group::getVAO() {
+    return this->VAO;
+};

@@ -10,24 +10,20 @@ using namespace std;
 
 class Group {
 private:
-	std::string name;
-	std::string material;
+	string name;
+	string material;
 	vector<Face*> faces;
-	GLuint vertVAO;
-	GLuint texCoordVAO;
-	GLuint normVAO;
+	GLuint VAO;
 
 public:
 	Group();
 	~Group();
 	void setName(string name);
 	void setMaterial(string material);
+	string getMaterial();
 	void addFaces(Face* face);
 	vector<Face*> getFaces();
-	void setVertVAO(GLuint vao);
-	GLuint getVertVAO();
-	void setTexCoordVAO(GLuint vao);
-	GLuint getTexCoordVAO();
-	void setNormVAO(GLuint vao);
-	GLuint getNormVAO();
+	void setVAO(GLuint vao);
+	GLuint getVAO();
+	int numVertices;
 };

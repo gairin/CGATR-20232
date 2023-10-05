@@ -16,4 +16,5 @@ public:
 	Mesh* getMesh();
 	void setMesh(Mesh* mesh);
 	void setTransform(glm::mat4 t);
+	glm::mat4 getTransform();
 };
