@@ -114,7 +114,8 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-    // Ler o asset 3D
+    int currentObjectIndex = 0;
+
     ObjReader objReader;
     Obj3D* pyramid = new Obj3D();
 
@@ -126,12 +127,6 @@ int main() {
         vector<GLfloat> vertices;
         vector<GLfloat> texCoords;
         vector<GLfloat> normals;
-
-        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO, VAO;
-        glGenBuffers(1, &gVertVBO);
-        glGenBuffers(1, &gTexCoordsVBO);
-        glGenBuffers(1, &gNormalsVBO);
-        glGenVertexArrays(1, &VAO);
 
         for (Face* f : g->getFaces()) {
             for (int i = 0; i < f->getVertices().size(); i++) {
@@ -152,9 +147,29 @@ int main() {
             }
         }
 
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        GLuint VAO;
+        glGenVertexArrays(1, &VAO);
+        glBindVertexArray(VAO);
+
+        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
+        glGenBuffers(1, &gVertVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+        
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(0);
+
+        g->setVAO(VAO);
+
+        /*
+        glGenBuffers(1, &gVertVBO);
+        glGenBuffers(1, &gTexCoordsVBO);
+        glGenBuffers(1, &gNormalsVBO);
+        glGenVertexArrays(1, &VAO);
+        */
+        
+        
+        /*
         glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(GLfloat), texCoords.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(1);
@@ -164,7 +179,7 @@ int main() {
 
         glBindVertexArray(VAO);
         g->setVAO(VAO);
-        glBindVertexArray(0);
+        glBindVertexArray(0);*/
     }
 
     // Variáveis para controlar a câmera
@@ -179,10 +194,10 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-
+        
         pyramid->setTransform(viewMatrix);
 
         GLint loc = glGetUniformLocation(shader_programme, "model");
@@ -190,7 +205,7 @@ int main() {
                            glm::value_ptr(pyramid->getTransform()));
 
         for (Group* g : mesh->getGroups()) {
-            
+
             glBindVertexArray(g->getVAO());
             //Material* material = getMaterial(g->getMaterial());
             //glBindTexture(GL_TEXTURE_2D, material->tid);
@@ -228,12 +243,15 @@ int main() {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
         }
-
+        
         cameraFront.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
         cameraFront.y = sin(glm::radians(pitch));
         cameraFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
         cameraFront = glm::normalize(cameraFront);
 
+        cout << cameraPosition.x << endl;
+        cout << cameraPosition.y << endl;
+        cout << cameraPosition.z << endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
