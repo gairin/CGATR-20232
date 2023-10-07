@@ -33,42 +33,44 @@ Mesh* ObjReader::read(string content) {
             float x, y, z;
             sline >> x >> y >> z;
 
-            mesh->addVertices(x, y, z);
+            glm::vec3 v = glm::vec3(x, y, z);
+            mesh->vertices.push_back(v);
         }
 
         else if (token == "vn") {
             float x, y, z;
             sline >> x >> y >> z;
 
-            mesh->addNormals(x, y, z);
+            glm::vec3 vn = glm::vec3(x, y, z);
+            mesh->normals.push_back(vn);
         }
         
         else if (token == "vt") {
             float x, y, z;
             sline >> x >> y >> z;
 
-            mesh->addTexCoords(x, y, z);
+            glm::vec3 vt = glm::vec3(x, y, z);
+            mesh->texCoords.push_back(vt);
         }
 
         else if (token == "g") {
             if (firstGroup) {
                 string groupName;
                 sline >> groupName;
-                group->setName(groupName);
+                group->name = groupName;
 
                 firstGroup = false;
             }
 
             else {
-                mesh->addGroup(group);
+                mesh->groups.push_back(group);
 
                 group = new Group();
 
                 string groupName;
                 sline >> groupName;
                 
-                group->setName(groupName);
-                mesh->addGroup(group);
+                group->name = groupName;
             }
         }
 
@@ -76,15 +78,15 @@ Mesh* ObjReader::read(string content) {
             string mtllib;
             sline >> mtllib;
 
-            mesh->setMtllib(mtllib);
+            mesh->mtllib = mtllib;
         }
 
         else if (token == "usemtl") {
             string mtlName;
             sline >> mtlName;
 
-            mat->setMtlName(mtlName);
-            group->setMaterial(mtlName);
+            mat->mtlName = mtlName;
+            group->material = mtlName;
         }
 
         else if (token == "f") {
@@ -100,25 +102,24 @@ Mesh* ObjReader::read(string content) {
                 getline(ss, ns, '/');
 
                 int v = stoi(vs) - 1;
-                face->addVertice(v);
+                face->vertices.push_back(v);
 
                 int t = ts != "" ? stoi(ts) - 1 : -1;
                 int n = ns != "" ? stoi(ns) - 1 : -1;
 
                 if (t >= 0) {
-                    face->addTexCoord(t);
+                    face->texCoords.push_back(t);
                 }
 
                 if (n >= 0) {
-                    face->addNormal(n);
+                    face->normals.push_back(n);
                 }
             }
 
-            group->addFaces(face);
-            group->numVertices++;
+            group->faces.push_back(face);
         }
     }
 
-    mesh->addGroup(group);
+    mesh->groups.push_back(group);
     return mesh;
 }

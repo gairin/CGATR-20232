@@ -25,7 +25,11 @@
 
 using namespace std;
 
+Obj3D* shoot();
+bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider);
+void readVertices(Obj3D* obj);
 string loadAssets();
+string loadAssets2(string path);
 
 vector<Obj3D> objects;
 
@@ -67,22 +71,22 @@ int main() {
     const char* vertex_shader =
         "#version 460\n"
         "layout(location=0) in vec3 vertexPosition;"
-        "layout(location=1) in vec3 vertexColor;"
+        //"layout(location=1) in vec3 vertexColor;"
         "uniform mat4 model;"
         "uniform mat4 view;"
         "uniform mat4 projection;"
-        "out vec3 fragColor;"
+        //"out vec3 fragColor;"
         "void main() {"
         "   gl_Position = projection * view * model * vec4(vertexPosition, 1.0);"
-        "   fragColor = vertexColor;"
+        //"   fragColor = vertexColor;"
         "}";
 
     const char* fragment_shader =
         "#version 460\n"
-        "in vec3 fragColor;"
+        //"in vec3 fragColor;"
         "out vec4 frag_color;"
         "void main() {"
-        "   frag_color = vec4(fragColor, 1.0);"
+        "   frag_color = vec4(0.7, 0.4, 0.2, 1.0);"
         "}";
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -97,10 +101,7 @@ int main() {
     glAttachShader(shader_programme, fs);
     glAttachShader(shader_programme, vs);
     glLinkProgram(shader_programme);
-
     glUseProgram(shader_programme);
-    glDeleteShader(vs);
-    glDeleteShader(fs);
 
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     glm::mat4 viewMatrix = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -114,73 +115,14 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-    int currentObjectIndex = 0;
-
     ObjReader objReader;
-    Obj3D* pyramid = new Obj3D();
+    Obj3D* currentObj = new Obj3D();
+    Obj3D* shot = nullptr;
 
-    Mesh* mesh = objReader.read(loadAssets());
-    pyramid->setMesh(mesh);
-    int vertNum = 0;
+    currentObj->mesh = objReader.read(loadAssets());
+    Mesh* mesh = currentObj->mesh;
 
-    for (Group* g : mesh->getGroups()) {
-        vector<GLfloat> vertices;
-        vector<GLfloat> texCoords;
-        vector<GLfloat> normals;
-
-        for (Face* f : g->getFaces()) {
-            for (int i = 0; i < f->getVertices().size(); i++) {
-                glm::vec3 v = mesh->getVertices()[f->getVertices()[i]];
-                vertices.push_back(v.x);
-                vertices.push_back(v.y);
-                vertices.push_back(v.z);
-                vertNum++;
-
-                glm::vec2 tc = mesh->getTexCoords()[f->getTexCoords()[i]];
-                texCoords.push_back(tc.x);
-                texCoords.push_back(tc.y);
-
-                glm::vec3 n = mesh->getNormals()[f->getNormals()[i]];
-                normals.push_back(n.x);
-                normals.push_back(n.y);
-                normals.push_back(n.z);
-            }
-        }
-
-        GLuint VAO;
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
-        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
-        glGenBuffers(1, &gVertVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
-        
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        glEnableVertexAttribArray(0);
-
-        g->setVAO(VAO);
-
-        /*
-        glGenBuffers(1, &gVertVBO);
-        glGenBuffers(1, &gTexCoordsVBO);
-        glGenBuffers(1, &gNormalsVBO);
-        glGenVertexArrays(1, &VAO);
-        */
-        
-        
-        /*
-        glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(GLfloat), texCoords.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-        glEnableVertexAttribArray(1);
-        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), normals.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-        glEnableVertexAttribArray(2);
-
-        glBindVertexArray(VAO);
-        g->setVAO(VAO);
-        glBindVertexArray(0);*/
-    }
+    readVertices(currentObj);
 
     // Variáveis para controlar a câmera
     glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f); // posição
@@ -194,24 +136,29 @@ int main() {
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
+        // PERSPECTIVA DO OBJETO
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(currentObj->transform));
         
-        pyramid->setTransform(viewMatrix);
+        // ESCALA DO OBJETO
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+        glm::mat4 modelMatrix = scaleMatrix * currentObj->transform;
 
-        GLint loc = glGetUniformLocation(shader_programme, "model");
-        glUniformMatrix4fv(loc, 1, GL_FALSE,
-                           glm::value_ptr(pyramid->getTransform()));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
-        for (Group* g : mesh->getGroups()) {
-
-            glBindVertexArray(g->getVAO());
+        for (Group* g : mesh->groups) {
+            glBindVertexArray(g->VAO);
             //Material* material = getMaterial(g->getMaterial());
             //glBindTexture(GL_TEXTURE_2D, material->tid);
             glDrawArrays(GL_TRIANGLES, 0, g->numVertices);
-
-            glUseProgram(0);
+        }
+        
+        if (shot) {
+            if (collisionCheck(mesh->min, mesh->max, shot)) {
+                cout << "COLISÃO" << endl;
+            }
         }
 
         // Se possível fazer a câmera mover com o mouse
@@ -239,19 +186,26 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             yaw += cameraRotationSpeed;
         }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            // MUITO CUIDADO!! VÁRIAS CHAMADAS!
+            shot = shoot();
+            //shot->;
+
+            // está funcionando, ele tá aí, mas só é renderizado no apertar
+            for (Group* g : shot->mesh->groups) {
+                glBindVertexArray(g->VAO);
+                glDrawArrays(GL_QUADS, 0, g->numVertices);
+            }
+        }
+
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
         }
-        
+
         cameraFront.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
         cameraFront.y = sin(glm::radians(pitch));
         cameraFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
         cameraFront = glm::normalize(cameraFront);
-
-        cout << cameraPosition.x << endl;
-        cout << cameraPosition.y << endl;
-        cout << cameraPosition.z << endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -261,9 +215,86 @@ int main() {
     return 0;
 };
 
+Obj3D* shoot() {
+    // MUITO CUIDADO!! VÁRIAS CHAMADAS!!
+    ObjReader objReader;
+    Obj3D* shot = new Obj3D();
+
+    shot->transform = glm::mat4(1.0f);
+
+    glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.5f));
+    shot->transform = scaleMatrix;
+
+    shot->mesh = objReader.read(loadAssets2("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj"));
+    shot->deletable = true;
+
+    readVertices(shot);
+
+    return shot;
+}
+
+bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider) {
+    return false;
+}
+
+void readVertices(Obj3D* obj) {
+    Mesh* mesh = obj->mesh;
+
+    for (Group* g : mesh->groups) {
+        vector<GLfloat> vertices;
+        vector<GLfloat> texCoords;
+        vector<GLfloat> normals;
+
+        for (Face* f : g->faces) {
+            for (int i = 0; i < f->vertices.size(); i++) {
+                glm::vec3 v = mesh->vertices[f->vertices[i]];
+                vertices.push_back(v.x);
+                vertices.push_back(v.y);
+                vertices.push_back(v.z);
+                g->numVertices++;
+
+                mesh->min.x = glm::min(mesh->min.x, v.x);
+                mesh->min.y = glm::min(mesh->min.y, v.y);
+                mesh->min.z = glm::min(mesh->min.z, v.z);
+                mesh->max.x = glm::max(mesh->max.x, v.x);
+                mesh->max.y = glm::max(mesh->max.y, v.y);
+                mesh->max.z = glm::max(mesh->max.z, v.z);
+
+                glm::vec2 tc = mesh->texCoords[f->texCoords[i]];
+                texCoords.push_back(tc.x);
+                texCoords.push_back(tc.y);
+
+                glm::vec3 n = mesh->normals[f->normals[i]];
+                normals.push_back(n.x);
+                normals.push_back(n.y);
+                normals.push_back(n.z);
+            }
+        }
+
+        GLuint VAO;
+        glGenVertexArrays(1, &VAO);
+        glBindVertexArray(VAO);
+
+        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
+        glGenBuffers(1, &gVertVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
+        glBufferData(GL_ARRAY_BUFFER, (vertices.size() * sizeof(GLfloat)),
+                     vertices.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glEnableVertexAttribArray(0);
+
+        g->VAO = VAO;
+    }
+}
+
 string loadAssets() {
     // Por enquanto, caminho absoluto para testar depois melhoro isso
-    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
+    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
+    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj";
+    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.obj";
+    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj";
+
     ifstream inputFile;
 
     inputFile.open(filePath);
@@ -281,4 +312,25 @@ string loadAssets() {
 
     inputFile.close();
     return content;
-};
+}
+
+// assassinando o c++ temporariamente até eu unificar a importação de assets
+string loadAssets2(string path) {
+    ifstream inputFile;
+
+    inputFile.open(path);
+
+    if (!inputFile.is_open()) {
+        return "";
+    }
+
+    string content;
+    std::string line;
+
+    while (std::getline(inputFile, line)) {
+        content += line + "\n";
+    }
+
+    inputFile.close();
+    return content;
+}

@@ -5,11 +5,9 @@ using namespace std;
 
 class Material {
 private:
-	string mtlName;
 
 public:
 	Material();
 	~Material();
-	void setMtlName(string name);
-	string getMtlName();
+	string mtlName;
 };
