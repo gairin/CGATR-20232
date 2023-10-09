@@ -86,7 +86,7 @@ int main() {
         //"in vec3 fragColor;"
         "out vec4 frag_color;"
         "void main() {"
-        "   frag_color = vec4(0.7, 0.4, 0.2, 1.0);"
+        "   frag_color = vec4(1.0);"
         "}";
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -134,18 +134,25 @@ int main() {
     GLfloat yaw = -90.0f;
     GLfloat cameraRotationSpeed = 0.1f;
 
+    double lastTime = glfwGetTime();
+
+    vector<Obj3D> shots;
+
     while (!glfwWindowShouldClose(window)) {
+        double currentTime = glfwGetTime();
+        double deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // PERSPECTIVA DO OBJETO
+        // Matriz de perspectiva
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(currentObj->transform));
         
-        // ESCALA DO OBJETO
+        // Matriz de escala
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
         glm::mat4 modelMatrix = scaleMatrix * currentObj->transform;
-
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
         for (Group* g : mesh->groups) {
@@ -155,7 +162,27 @@ int main() {
             glDrawArrays(GL_TRIANGLES, 0, g->numVertices);
         }
         
+        // Configuração do tiro
         if (shot) {
+            float shotSpeed = 5.0f;
+
+            // Matriz de escala 
+            glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02f));
+            glm::mat4 modelMatrix = scaleMatrix * shot->transform;
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+            glm::vec3 shotPosition = shot->transform[3];
+
+            // Matriz de translação
+            glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), shot->direction * shotSpeed * static_cast<float>(deltaTime));
+
+            shot->transform *= translationMatrix;
+
+            for (Group* g : shot->mesh->groups) {
+                glBindVertexArray(g->VAO);
+                glDrawArrays(GL_QUADS, 0, g->numVertices);
+            }
+
             if (collisionCheck(mesh->min, mesh->max, shot)) {
                 cout << "COLISÃO" << endl;
             }
@@ -186,17 +213,12 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             yaw += cameraRotationSpeed;
         }
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            // MUITO CUIDADO!! VÁRIAS CHAMADAS!
-            shot = shoot();
-            //shot->;
-
-            // está funcionando, ele tá aí, mas só é renderizado no apertar
-            for (Group* g : shot->mesh->groups) {
-                glBindVertexArray(g->VAO);
-                glDrawArrays(GL_QUADS, 0, g->numVertices);
+        if (!shot) {
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+                shot = shoot();
             }
         }
+        
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             break;
@@ -220,10 +242,8 @@ Obj3D* shoot() {
     ObjReader objReader;
     Obj3D* shot = new Obj3D();
 
-    shot->transform = glm::mat4(1.0f);
-
-    glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.5f));
-    shot->transform = scaleMatrix;
+    shot->transform = glm::mat4(1);
+    shot->direction = glm::vec3(0, 0, -1);
 
     shot->mesh = objReader.read(loadAssets2("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj"));
     shot->deletable = true;
