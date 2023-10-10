@@ -122,7 +122,7 @@ int main() {
     vector<Obj3D*> objects = loadAssets(path);
 
     // Bundle depois em outra função pra usar no game loop
-    int currentObjIndex = 0;
+    int currentObjIndex = 1;
     Obj3D* currentObj = objects[currentObjIndex];
     Mesh* mesh = currentObj->mesh;
     readVertices(currentObj);
@@ -142,6 +142,10 @@ int main() {
     //vector<Obj3D> shots;
     float shotLifetime = 6.0f;
     float shotSpeed = 20.0f;
+
+    bool keyZPressed = false;
+    bool keyXPressed = false;
+    bool keySpacePressed = false;
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -169,6 +173,7 @@ int main() {
 
         // Configuração do tiro
         if (shot) {
+
             // Matriz de escala 
             glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02f));
             glm::mat4 modelMatrix = scaleMatrix * shot->transform;
@@ -197,36 +202,88 @@ int main() {
             }
         }
 
+        // Controles
         // Se possível fazer a câmera mover com o mouse
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPosition += cameraSpeed * cameraFront;
         }
+
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
             cameraPosition -= cameraSpeed * cameraFront;
         }
+
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
             cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
         }
+
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
         }
+
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
             pitch += cameraRotationSpeed;
         }
+
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
             pitch -= cameraRotationSpeed;
         }
+
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             yaw -= cameraRotationSpeed;
         }
+
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             yaw += cameraRotationSpeed;
         }
+
         if (!shot) {
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !keySpacePressed) {
+                keySpacePressed = true;
+
                 shot = shoot(cameraPosition, cameraFront);
                 shotLifetime = 6.0f;
             }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+            keySpacePressed = false;
+        }
+        
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && !keyZPressed) {
+            keyZPressed = true;
+
+            if (currentObjIndex == objects.size() - 1) {
+                currentObjIndex = 0;
+            }
+
+            else {
+                currentObjIndex++;
+            }
+            currentObj = objects[currentObjIndex];
+            mesh = currentObj->mesh;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE) {
+            keyZPressed = false;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && !keyXPressed) {
+            keyXPressed = true;
+
+            if (currentObjIndex == 0) {
+                currentObjIndex = objects.size() - 1;
+            }
+
+            else {
+                currentObjIndex--;
+            }
+
+            currentObj = objects[currentObjIndex];
+            mesh = currentObj->mesh;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_RELEASE) {
+            keyXPressed = false;
         }
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -348,7 +405,7 @@ vector<Obj3D*> loadAssets(string pathConfig) {
 
     nlohmann::json assets = json["Assets"];
 
-    for (auto& asset : assets) {
+   for (auto& asset : assets) {
         Obj3D* obj = new Obj3D;
         obj->mesh = new Mesh();
 
@@ -380,6 +437,7 @@ vector<Obj3D*> loadAssets(string pathConfig) {
 
         ObjReader objReader;
         obj->mesh = objReader.read(content);
+        readVertices(obj);
 
         objects.push_back(obj);
     }

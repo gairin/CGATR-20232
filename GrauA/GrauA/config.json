@@ -23,16 +23,9 @@
     },
     {
       "name": "trout",
-      "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout.obj",
+      "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.obj",
       "deletable": true,
-      "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout.mtl",
-      "renderMode": "1"
-    },
-    {
-      "name": "cubo1",
-      "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo1\\cubo1.obj",
-      "deletable": true,
-      "materialPath": "",
+      "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.mtl",
       "renderMode": "1"
     },
     {
