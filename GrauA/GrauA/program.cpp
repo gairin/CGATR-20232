@@ -25,11 +25,11 @@
 
 using namespace std;
 
-Obj3D* shoot();
+Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront);
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider);
 void readVertices(Obj3D* obj);
 string loadAssets();
-string loadAssets2(string path);
+string loadShotAsset(string path);
 
 vector<Obj3D> objects;
 
@@ -136,7 +136,9 @@ int main() {
 
     double lastTime = glfwGetTime();
 
-    vector<Obj3D> shots;
+    //vector<Obj3D> shots;
+    float shotLifetime = 6.0f;
+    float shotSpeed = 20.0f;
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -157,25 +159,20 @@ int main() {
 
         for (Group* g : mesh->groups) {
             glBindVertexArray(g->VAO);
-            //Material* material = getMaterial(g->getMaterial());
+            //Material* material = getMaterial(g->material());
             //glBindTexture(GL_TEXTURE_2D, material->tid);
             glDrawArrays(GL_TRIANGLES, 0, g->numVertices);
         }
         
         // Configuração do tiro
         if (shot) {
-            float shotSpeed = 5.0f;
-
             // Matriz de escala 
             glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02f));
             glm::mat4 modelMatrix = scaleMatrix * shot->transform;
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
-            glm::vec3 shotPosition = shot->transform[3];
-
             // Matriz de translação
             glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), shot->direction * shotSpeed * static_cast<float>(deltaTime));
-
             shot->transform *= translationMatrix;
 
             for (Group* g : shot->mesh->groups) {
@@ -185,6 +182,15 @@ int main() {
 
             if (collisionCheck(mesh->min, mesh->max, shot)) {
                 cout << "COLISÃO" << endl;
+            }
+
+            // Verificação de timeout
+            if (shotLifetime >= 0) {
+                shotLifetime -= deltaTime;
+            }
+
+            if (shotLifetime <= 0) {
+                shot = nullptr;
             }
         }
 
@@ -215,10 +221,10 @@ int main() {
         }
         if (!shot) {
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-                shot = shoot();
+                shot = shoot(cameraPosition, cameraFront);
+                shotLifetime = 6.0f;
             }
         }
-        
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             break;
@@ -237,15 +243,15 @@ int main() {
     return 0;
 };
 
-Obj3D* shoot() {
-    // MUITO CUIDADO!! VÁRIAS CHAMADAS!!
+Obj3D* shoot(glm::vec3 &cameraPosition, glm::vec3 &cameraFront) {
     ObjReader objReader;
     Obj3D* shot = new Obj3D();
 
     shot->transform = glm::mat4(1);
-    shot->direction = glm::vec3(0, 0, -1);
+    shot->transform[3] = glm::vec4(cameraPosition, 1.0f);
+    shot->direction = cameraFront;
 
-    shot->mesh = objReader.read(loadAssets2("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj"));
+    shot->mesh = objReader.read(loadShotAsset("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj"));
     shot->deletable = true;
 
     readVertices(shot);
@@ -335,7 +341,7 @@ string loadAssets() {
 }
 
 // assassinando o c++ temporariamente até eu unificar a importação de assets
-string loadAssets2(string path) {
+string loadShotAsset(string path) {
     ifstream inputFile;
 
     inputFile.open(path);
