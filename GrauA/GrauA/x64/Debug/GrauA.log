@@ -1,6 +1,14 @@
-﻿  program.cpp
+﻿  Face.cpp
+  Group.cpp
+  Material.cpp
+  Mesh.cpp
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\Mesh.cpp(7,15): warning C4101: 'min': variável local não referenciada
+  Obj3D.cpp
+  ObjReader.cpp
+  program.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\include\filesystem(13): warning STL4038: The contents of <filesystem> are available only with C++17 or later.
 C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(189,33): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(307,41): warning C4101: 'gNormalsVBO': variável local não referenciada
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(307,26): warning C4101: 'gTexCoordsVBO': variável local não referenciada
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(319,41): warning C4101: 'gNormalsVBO': variável local não referenciada
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(319,26): warning C4101: 'gTexCoordsVBO': variável local não referenciada
+  Gerando Código...
   GrauA.vcxproj -> C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\x64\Debug\GrauA.exe

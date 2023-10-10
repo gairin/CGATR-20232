@@ -117,11 +117,11 @@ int main() {
 
     ObjReader objReader;
     Obj3D* currentObj = new Obj3D();
+
     Obj3D* shot = nullptr;
-
     currentObj->mesh = objReader.read(loadAssets());
-    Mesh* mesh = currentObj->mesh;
 
+    Mesh* mesh = currentObj->mesh;
     readVertices(currentObj);
 
     // Variáveis para controlar a câmera
@@ -260,7 +260,22 @@ Obj3D* shoot(glm::vec3 &cameraPosition, glm::vec3 &cameraFront) {
 }
 
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider) {
-    return false;
+
+    // Os valores sendo checados aqui não estão mudando, por isso sempre retorna true.
+
+    if (max.x < collider->mesh->min.x || min.x > collider->mesh->max.x) {
+        return false; // eixo x
+    }
+
+    if (max.y < collider->mesh->min.y || min.y > collider->mesh->max.y) {
+        return false; // eixo y
+    }
+
+    if (max.z < collider->mesh->min.z || min.z > collider->mesh->max.z) {
+        return false; // eixo z
+    }
+
+    return true;
 }
 
 void readVertices(Obj3D* obj) {
@@ -317,10 +332,12 @@ void readVertices(Obj3D* obj) {
 string loadAssets() {
     // Por enquanto, caminho absoluto para testar depois melhoro isso
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
-    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj";
+    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj";
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.obj";
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj";
-
+    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\dragon\\dragon.obj";
+    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\teapot\\teapot1.obj";
+    
     ifstream inputFile;
 
     inputFile.open(filePath);
