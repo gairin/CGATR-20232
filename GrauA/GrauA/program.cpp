@@ -17,6 +17,9 @@
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLM/gtc/type_ptr.hpp>
 
+// Leitor de JSON
+#include <nlohmann/json.hpp>
+
 // Classes
 #include "ObjReader.h"
 #include "Obj3D.h"
@@ -28,10 +31,8 @@ using namespace std;
 Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront);
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider);
 void readVertices(Obj3D* obj);
-string loadAssets();
+vector<Obj3D*> loadAssets(string pathConfig);
 string loadShotAsset(string path);
-
-vector<Obj3D> objects;
 
 // Protótipos de função
 
@@ -115,12 +116,14 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-    ObjReader objReader;
-    Obj3D* currentObj = new Obj3D();
-
     Obj3D* shot = nullptr;
-    currentObj->mesh = objReader.read(loadAssets());
 
+    string path = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\GrauA\\config.json";
+    vector<Obj3D*> objects = loadAssets(path);
+
+    // Bundle depois em outra função pra usar no game loop
+    int currentObjIndex = 0;
+    Obj3D* currentObj = objects[currentObjIndex];
     Mesh* mesh = currentObj->mesh;
     readVertices(currentObj);
 
@@ -151,7 +154,7 @@ int main() {
         glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(currentObj->transform));
-        
+
         // Matriz de escala
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
         glm::mat4 modelMatrix = scaleMatrix * currentObj->transform;
@@ -161,9 +164,9 @@ int main() {
             glBindVertexArray(g->VAO);
             //Material* material = getMaterial(g->material());
             //glBindTexture(GL_TEXTURE_2D, material->tid);
-            glDrawArrays(GL_TRIANGLES, 0, g->numVertices);
+            glDrawArrays(currentObj->renderMode, 0, g->numVertices);
         }
-        
+
         // Configuração do tiro
         if (shot) {
             // Matriz de escala 
@@ -243,7 +246,7 @@ int main() {
     return 0;
 };
 
-Obj3D* shoot(glm::vec3 &cameraPosition, glm::vec3 &cameraFront) {
+Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront) {
     ObjReader objReader;
     Obj3D* shot = new Obj3D();
 
@@ -260,7 +263,6 @@ Obj3D* shoot(glm::vec3 &cameraPosition, glm::vec3 &cameraFront) {
 }
 
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider) {
-
     // Os valores sendo checados aqui não estão mudando, por isso sempre retorna true.
 
     if (max.x < collider->mesh->min.x || min.x > collider->mesh->max.x) {
@@ -329,7 +331,65 @@ void readVertices(Obj3D* obj) {
     }
 }
 
-string loadAssets() {
+vector<Obj3D*> loadAssets(string pathConfig) {
+    vector<Obj3D*> objects;
+
+    ifstream file;
+    file.open(pathConfig);
+
+    if (!file.is_open()) {
+        cerr << "Erro ao abrir o arquivo JSON." << endl;
+        return objects;
+    }
+
+    // Fazer o parsing do JSON
+    nlohmann::json json;
+    file >> json;
+
+    nlohmann::json assets = json["Assets"];
+
+    for (auto& asset : assets) {
+        Obj3D* obj = new Obj3D;
+        obj->mesh = new Mesh();
+
+        obj->name = asset["name"];
+        obj->transform = glm::mat4(1);
+        obj->deletable = asset["deletable"];
+        obj->direction = glm::vec3(0);
+        obj->path = asset["path"];
+        obj->mesh->mtllib = asset["materialPath"];
+        string renderMode = asset["renderMode"];
+
+        obj->setRenderMode(stoi(renderMode));
+
+        ifstream inputFile;
+        inputFile.open(obj->path);
+
+        if (!inputFile.is_open()) {
+            return objects;
+        }
+
+        string content;
+        string line;
+
+        while (getline(inputFile, line)) {
+            content += line + "\n";
+        }
+
+        inputFile.close();
+
+        ObjReader objReader;
+        obj->mesh = objReader.read(content);
+
+        objects.push_back(obj);
+    }
+
+    file.close();
+    return objects;
+}
+
+/*
+string loadAssets(string path) {
     // Por enquanto, caminho absoluto para testar depois melhoro isso
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj";
@@ -337,7 +397,7 @@ string loadAssets() {
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj";
     //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\dragon\\dragon.obj";
     string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\teapot\\teapot1.obj";
-    
+
     ifstream inputFile;
 
     inputFile.open(filePath);
@@ -356,6 +416,7 @@ string loadAssets() {
     inputFile.close();
     return content;
 }
+*/
 
 // assassinando o c++ temporariamente até eu unificar a importação de assets
 string loadShotAsset(string path) {

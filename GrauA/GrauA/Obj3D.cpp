@@ -8,3 +8,7 @@ Obj3D::Obj3D() {
 Obj3D::~Obj3D() {
 
 }
+
+void Obj3D::setRenderMode(int i) {
+	i == 0 ? this->renderMode = GL_TRIANGLES : this->renderMode = GL_QUADS;
+}

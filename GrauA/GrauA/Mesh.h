@@ -14,6 +14,7 @@ private:
 public:
     Mesh();
     ~Mesh();
+    void setMtlLib(string s);
     string mtllib;
     glm::vec3 min, max;
     vector<glm::vec3> vertices;

@@ -11,3 +11,7 @@ Mesh::Mesh() {
 Mesh::~Mesh() {
 
 }
+
+void Mesh::setMtlLib(string s) {
+    s == "" ? this->mtllib = nullptr : this->mtllib = s;
+}
