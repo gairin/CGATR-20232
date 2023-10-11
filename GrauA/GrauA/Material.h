@@ -9,5 +9,6 @@ private:
 public:
 	Material();
 	~Material();
+	int width, height;
 	string mtlName;
 };

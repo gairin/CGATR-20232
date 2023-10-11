@@ -123,3 +123,4 @@ Mesh* ObjReader::read(string content) {
     mesh->groups.push_back(group);
     return mesh;
 }
+

@@ -5,35 +5,40 @@
       "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj",
       "deletable": true,
       "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.mtl",
-      "renderMode": "1"
+      "renderMode": "1",
+      "scaleFactor":  "0.2"
     },
     {
       "name": "mesa01",
       "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj",
       "deletable": true,
       "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.mtl",
-      "renderMode": "0"
+      "renderMode": "0",
+      "scaleFactor": "0.08"
     },
     {
       "name": "pyramid",
       "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj",
       "deletable": false,
       "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.mtl",
-      "renderMode": "0"
+      "renderMode": "0",
+      "scaleFactor": "0.5"
     },
     {
       "name": "trout",
       "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.obj",
       "deletable": true,
       "materialPath": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.mtl",
-      "renderMode": "1"
+      "renderMode": "1",
+      "scaleFactor": "0.1"
     },
     {
       "name": "teapot",
-      "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\teapot\\teapot.obj",
+      "path": "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\teapot\\teapot1.obj",
       "deletable": false,
       "materialPath": "",
-      "renderMode": "0"
+      "renderMode": "0",
+      "scaleFactor": "0.1"
     }
   ]
 }

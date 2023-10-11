@@ -17,4 +17,5 @@ public:
 	glm::vec3 direction;
 	GLuint renderMode;
 	string path;
+	float scaleFactor;
 };

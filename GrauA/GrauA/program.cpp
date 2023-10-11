@@ -20,6 +20,9 @@
 // Leitor de JSON
 #include <nlohmann/json.hpp>
 
+// STB_Image
+#include <stb_image.h>
+
 // Classes
 #include "ObjReader.h"
 #include "Obj3D.h"
@@ -32,7 +35,7 @@ Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront);
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider);
 void readVertices(Obj3D* obj);
 vector<Obj3D*> loadAssets(string pathConfig);
-string loadShotAsset(string path);
+string readObjFile(string path);
 
 // Protótipos de função
 
@@ -116,10 +119,10 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-    Obj3D* shot = nullptr;
 
     string path = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\GrauA\\config.json";
     vector<Obj3D*> objects = loadAssets(path);
+    Obj3D* shot = nullptr;
 
     // Bundle depois em outra função pra usar no game loop
     int currentObjIndex = 1;
@@ -141,7 +144,7 @@ int main() {
 
     //vector<Obj3D> shots;
     float shotLifetime = 6.0f;
-    float shotSpeed = 20.0f;
+    float shotSpeed = 10.0f;
 
     bool keyZPressed = false;
     bool keyXPressed = false;
@@ -160,7 +163,7 @@ int main() {
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(currentObj->transform));
 
         // Matriz de escala
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(currentObj->scaleFactor));
         glm::mat4 modelMatrix = scaleMatrix * currentObj->transform;
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
@@ -173,9 +176,8 @@ int main() {
 
         // Configuração do tiro
         if (shot) {
-
             // Matriz de escala 
-            glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02f));
+            glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02));
             glm::mat4 modelMatrix = scaleMatrix * shot->transform;
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
@@ -183,13 +185,20 @@ int main() {
             glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), shot->direction * shotSpeed * static_cast<float>(deltaTime));
             shot->transform *= translationMatrix;
 
+            shot->mesh->min *= shot->direction;
+            shot->mesh->max *= shot->direction;
+
             for (Group* g : shot->mesh->groups) {
                 glBindVertexArray(g->VAO);
                 glDrawArrays(GL_QUADS, 0, g->numVertices);
             }
-
+            /*
+            cout << "---------- Câmera -----------" << endl;
+            cout << cameraPosition.x << endl;
+            cout << cameraPosition.y << endl;
+            cout << cameraPosition.z << endl;
+            */
             if (collisionCheck(mesh->min, mesh->max, shot)) {
-                cout << "COLISÃO" << endl;
             }
 
             // Verificação de timeout
@@ -261,6 +270,9 @@ int main() {
             }
             currentObj = objects[currentObjIndex];
             mesh = currentObj->mesh;
+
+            currentObj->mesh->min *= currentObj->scaleFactor;
+            currentObj->mesh->min *= currentObj->scaleFactor;
         }
 
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE) {
@@ -280,6 +292,9 @@ int main() {
 
             currentObj = objects[currentObjIndex];
             mesh = currentObj->mesh;
+
+            currentObj->mesh->min *= currentObj->scaleFactor;
+            currentObj->mesh->min *= currentObj->scaleFactor;
         }
 
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_RELEASE) {
@@ -307,11 +322,14 @@ Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront) {
     ObjReader objReader;
     Obj3D* shot = new Obj3D();
 
+    shot->name = "shot";
     shot->transform = glm::mat4(1);
     shot->transform[3] = glm::vec4(cameraPosition, 1.0f);
     shot->direction = cameraFront;
 
-    shot->mesh = objReader.read(loadShotAsset("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj"));
+    string content = readObjFile("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj");
+
+    shot->mesh = objReader.read(content);
     shot->deletable = true;
 
     readVertices(shot);
@@ -320,20 +338,50 @@ Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront) {
 }
 
 bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider) {
-    // Os valores sendo checados aqui não estão mudando, por isso sempre retorna true.
-
+    /*
+    cout << "---------CurrObj------------" << endl;
+    cout << "min.x" << endl;
+    cout << min.x << endl;
+    cout << "min.y" << endl;
+    cout << min.y << endl;
+    cout << "min.z" << endl;
+    cout << min.z << endl;
+    cout << "max.x" << endl;
+    cout << max.x << endl;
+    cout << "max.y" << endl;
+    cout << max.y << endl;
+    cout << "max.z" << endl;
+    cout << max.z << endl;
+    cout << "-------------Shot-----------" << endl;
+    cout << "min.x" << endl;
+    cout << collider->mesh->min.x << endl;
+    cout << "min.y" << endl;
+    cout << collider->mesh->min.y << endl;
+    cout << "min.z" << endl;
+    cout << collider->mesh->min.z << endl;
+    cout << "max.x" << endl;
+    cout << collider->mesh->max.x << endl;
+    cout << "max.y" << endl;
+    cout << collider->mesh->max.y << endl;
+    cout << "max.z" << endl;
+    cout << collider->mesh->max.z << endl;
+    */
     if (max.x < collider->mesh->min.x || min.x > collider->mesh->max.x) {
+        cout << "false" << endl;
         return false; // eixo x
     }
 
     if (max.y < collider->mesh->min.y || min.y > collider->mesh->max.y) {
+        cout << "false" << endl;
         return false; // eixo y
     }
 
     if (max.z < collider->mesh->min.z || min.z > collider->mesh->max.z) {
+        cout << "false" << endl;
         return false; // eixo z
     }
 
+    cout << "true" << endl;
     return true;
 }
 
@@ -405,7 +453,7 @@ vector<Obj3D*> loadAssets(string pathConfig) {
 
     nlohmann::json assets = json["Assets"];
 
-   for (auto& asset : assets) {
+    for (auto& asset : assets) {
         Obj3D* obj = new Obj3D;
         obj->mesh = new Mesh();
 
@@ -416,24 +464,12 @@ vector<Obj3D*> loadAssets(string pathConfig) {
         obj->path = asset["path"];
         obj->mesh->mtllib = asset["materialPath"];
         string renderMode = asset["renderMode"];
+        string scaleFactor = asset["scaleFactor"];
 
         obj->setRenderMode(stoi(renderMode));
+        obj->scaleFactor = stof(scaleFactor);
 
-        ifstream inputFile;
-        inputFile.open(obj->path);
-
-        if (!inputFile.is_open()) {
-            return objects;
-        }
-
-        string content;
-        string line;
-
-        while (getline(inputFile, line)) {
-            content += line + "\n";
-        }
-
-        inputFile.close();
+        string content = readObjFile(obj->path);
 
         ObjReader objReader;
         obj->mesh = objReader.read(content);
@@ -446,53 +482,21 @@ vector<Obj3D*> loadAssets(string pathConfig) {
     return objects;
 }
 
-/*
-string loadAssets(string path) {
-    // Por enquanto, caminho absoluto para testar depois melhoro isso
-    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\piramide\\pyramid.obj";
-    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\mesa\\mesa\\mesa01.obj";
-    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\trout\\trout\\trout.obj";
-    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj";
-    //string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\dragon\\dragon.obj";
-    string filePath = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\teapot\\teapot1.obj";
-
+string readObjFile(string path) {
     ifstream inputFile;
-
-    inputFile.open(filePath);
-
-    if (!inputFile.is_open()) {
-        return "";
-    }
-
-    string content;
-    std::string line;
-
-    while (std::getline(inputFile, line)) {
-        content += line + "\n";
-    }
-
-    inputFile.close();
-    return content;
-}
-*/
-
-// assassinando o c++ temporariamente até eu unificar a importação de assets
-string loadShotAsset(string path) {
-    ifstream inputFile;
-
     inputFile.open(path);
 
     if (!inputFile.is_open()) {
-        return "";
+        return nullptr;
     }
 
     string content;
-    std::string line;
+    string line;
 
-    while (std::getline(inputFile, line)) {
+    while (getline(inputFile, line)) {
         content += line + "\n";
     }
 
     inputFile.close();
     return content;
-}
+};
