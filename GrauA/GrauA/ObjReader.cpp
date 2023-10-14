@@ -124,3 +124,25 @@ Mesh* ObjReader::read(string content) {
     return mesh;
 }
 
+string ObjReader::readObjFile(string path) {
+    ifstream inputFile;
+    inputFile.open(path);
+
+    if (!inputFile.is_open()) {
+        return nullptr;
+    }
+
+    string content;
+    string line;
+
+    while (getline(inputFile, line)) {
+        content += line + "\n";
+    }
+
+    inputFile.close();
+    return content;
+};
+
+void ObjReader::loadTexture(const char* file_name, GLuint* tex) {
+    
+}

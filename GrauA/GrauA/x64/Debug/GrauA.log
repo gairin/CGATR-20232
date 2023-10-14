@@ -1,12 +1,8 @@
 ﻿  program.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\include\filesystem(13): warning STL4038: The contents of <filesystem> are available only with C++17 or later.
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(188,79): warning C4305: 'argumento': truncamento de 'double' para 'T'
-          with
-          [
-              T=float
-          ]
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(214,33): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(294,53): warning C4267: '=': conversão de 'size_t' para 'int', possível perda de dados
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(434,41): warning C4101: 'gNormalsVBO': variável local não referenciada
-C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(434,26): warning C4101: 'gTexCoordsVBO': variável local não referenciada
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(210,33): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(290,53): warning C4267: '=': conversão de 'size_t' para 'int', possível perda de dados
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(333,29): warning C4305: '=': truncamento de 'double' para 'float'
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(401,41): warning C4101: 'gNormalsVBO': variável local não referenciada
+C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\GrauA\program.cpp(401,26): warning C4101: 'gTexCoordsVBO': variável local não referenciada
   GrauA.vcxproj -> C:\Users\Acer\Documents\GitHub\CGATR-20232\GrauA\x64\Debug\GrauA.exe

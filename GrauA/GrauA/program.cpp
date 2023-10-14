@@ -21,7 +21,7 @@
 #include <nlohmann/json.hpp>
 
 // STB_Image
-#include <stb_image.h>
+#include <SOIL.h>
 
 // Classes
 #include "ObjReader.h"
@@ -32,10 +32,9 @@
 using namespace std;
 
 Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront);
-bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider);
+bool collisionCheck(Obj3D* obj, Obj3D* collider);
 void readVertices(Obj3D* obj);
 vector<Obj3D*> loadAssets(string pathConfig);
-string readObjFile(string path);
 
 // Protótipos de função
 
@@ -71,6 +70,7 @@ int main() {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
+    // Shaders (colocar em arquivo separado depois se possível)
     // Shaders (colocar em arquivo separado depois se possível)
     const char* vertex_shader =
         "#version 460\n"
@@ -122,6 +122,14 @@ int main() {
 
     string path = "C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\GrauA\\config.json";
     vector<Obj3D*> objects = loadAssets(path);
+
+    ObjReader objReader;
+
+    for (Obj3D* obj : objects) {
+        //objReader.loadTexture(obj->path);
+    }
+
+    vector<Material*> mats;
     Obj3D* shot = nullptr;
 
     // Bundle depois em outra função pra usar no game loop
@@ -177,7 +185,7 @@ int main() {
         // Configuração do tiro
         if (shot) {
             // Matriz de escala 
-            glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(0.02));
+            glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(shot->scaleFactor));
             glm::mat4 modelMatrix = scaleMatrix * shot->transform;
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
@@ -192,13 +200,9 @@ int main() {
                 glBindVertexArray(g->VAO);
                 glDrawArrays(GL_QUADS, 0, g->numVertices);
             }
-            /*
-            cout << "---------- Câmera -----------" << endl;
-            cout << cameraPosition.x << endl;
-            cout << cameraPosition.y << endl;
-            cout << cameraPosition.z << endl;
-            */
-            if (collisionCheck(mesh->min, mesh->max, shot)) {
+
+            if (collisionCheck(currentObj, shot)) {
+                cout << "Colidiu" << endl;
             }
 
             // Verificação de timeout
@@ -326,63 +330,31 @@ Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront) {
     shot->transform = glm::mat4(1);
     shot->transform[3] = glm::vec4(cameraPosition, 1.0f);
     shot->direction = cameraFront;
+    shot->scaleFactor = 0.02;
 
-    string content = readObjFile("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj");
+    string content = objReader.readObjFile("C:\\Users\\Acer\\Documents\\GitHub\\CGATR-20232\\GrauA\\Assets\\3D models\\cubo\\cube.obj");
 
-    shot->mesh = objReader.read(content);
+    Mesh* mesh = objReader.read(content);
+    shot->mesh = mesh;
     shot->deletable = true;
 
     readVertices(shot);
 
+    mesh->min += cameraPosition;
+    mesh->max += cameraPosition;
     return shot;
 }
 
-bool collisionCheck(glm::vec3 min, glm::vec3 max, Obj3D* collider) {
-    /*
-    cout << "---------CurrObj------------" << endl;
-    cout << "min.x" << endl;
-    cout << min.x << endl;
-    cout << "min.y" << endl;
-    cout << min.y << endl;
-    cout << "min.z" << endl;
-    cout << min.z << endl;
-    cout << "max.x" << endl;
-    cout << max.x << endl;
-    cout << "max.y" << endl;
-    cout << max.y << endl;
-    cout << "max.z" << endl;
-    cout << max.z << endl;
-    cout << "-------------Shot-----------" << endl;
-    cout << "min.x" << endl;
-    cout << collider->mesh->min.x << endl;
-    cout << "min.y" << endl;
-    cout << collider->mesh->min.y << endl;
-    cout << "min.z" << endl;
-    cout << collider->mesh->min.z << endl;
-    cout << "max.x" << endl;
-    cout << collider->mesh->max.x << endl;
-    cout << "max.y" << endl;
-    cout << collider->mesh->max.y << endl;
-    cout << "max.z" << endl;
-    cout << collider->mesh->max.z << endl;
-    */
-    if (max.x < collider->mesh->min.x || min.x > collider->mesh->max.x) {
-        cout << "false" << endl;
-        return false; // eixo x
-    }
+bool collisionCheck(Obj3D* obj, Obj3D* collider) {
+    
+    bool collisionX = obj->mesh->max.x >= collider->mesh->min.x && obj->mesh->min.x <= collider->mesh->max.x;
+    bool collisionY = obj->mesh->max.y >= collider->mesh->min.y && obj->mesh->min.y <= collider->mesh->max.y;
+    bool collisionZ = obj->mesh->max.z >= collider->mesh->min.z && obj->mesh->min.z <= collider->mesh->max.z;
 
-    if (max.y < collider->mesh->min.y || min.y > collider->mesh->max.y) {
-        cout << "false" << endl;
-        return false; // eixo y
-    }
+    bool ret = collisionX && collisionY && collisionZ;
+    cout << ret << endl;
 
-    if (max.z < collider->mesh->min.z || min.z > collider->mesh->max.z) {
-        cout << "false" << endl;
-        return false; // eixo z
-    }
-
-    cout << "true" << endl;
-    return true;
+    return collisionX && collisionY && collisionZ;
 }
 
 void readVertices(Obj3D* obj) {
@@ -418,6 +390,9 @@ void readVertices(Obj3D* obj) {
                 normals.push_back(n.z);
             }
         }
+
+        mesh->min *= obj->scaleFactor;
+        mesh->max *= obj->scaleFactor;
 
         GLuint VAO;
         glGenVertexArrays(1, &VAO);
@@ -469,9 +444,9 @@ vector<Obj3D*> loadAssets(string pathConfig) {
         obj->setRenderMode(stoi(renderMode));
         obj->scaleFactor = stof(scaleFactor);
 
-        string content = readObjFile(obj->path);
 
         ObjReader objReader;
+        string content = objReader.readObjFile(obj->path);
         obj->mesh = objReader.read(content);
         readVertices(obj);
 
@@ -481,22 +456,3 @@ vector<Obj3D*> loadAssets(string pathConfig) {
     file.close();
     return objects;
 }
-
-string readObjFile(string path) {
-    ifstream inputFile;
-    inputFile.open(path);
-
-    if (!inputFile.is_open()) {
-        return nullptr;
-    }
-
-    string content;
-    string line;
-
-    while (getline(inputFile, line)) {
-        content += line + "\n";
-    }
-
-    inputFile.close();
-    return content;
-};

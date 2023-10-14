@@ -11,4 +11,5 @@ public:
 	~Material();
 	int width, height;
 	string mtlName;
+	string mtlPath;
 };

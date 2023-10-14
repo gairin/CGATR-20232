@@ -9,5 +9,6 @@ public:
 	ObjReader();
 	~ObjReader();
 	Mesh* read(string content);
-	void loadTexture(string path);
+	string readObjFile(string path);
+	void loadTexture(const char* file_name, GLuint* tex);
 };
