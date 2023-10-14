@@ -87,10 +87,10 @@ int main() {
 
     const char* fragment_shader =
         "#version 460\n"
-        //"in vec3 fragColor;"
+        "uniform vec3 objectColor;"
         "out vec4 frag_color;"
         "void main() {"
-        "   frag_color = vec4(1.0);"
+        "   frag_color = vec4(objectColor, 1.0);"
         "}";
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -125,15 +125,10 @@ int main() {
 
     ObjReader objReader;
 
-    for (Obj3D* obj : objects) {
-        //objReader.loadTexture(obj->path);
-    }
-
-    vector<Material*> mats;
     Obj3D* shot = nullptr;
 
     // Bundle depois em outra função pra usar no game loop
-    int currentObjIndex = 1;
+    int currentObjIndex = 4;
     Obj3D* currentObj = objects[currentObjIndex];
     Mesh* mesh = currentObj->mesh;
     readVertices(currentObj);
@@ -175,10 +170,11 @@ int main() {
         glm::mat4 modelMatrix = scaleMatrix * currentObj->transform;
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
+        GLuint colorLoc = glGetUniformLocation(shader_programme, "objectColor");
+        glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f);
+
         for (Group* g : mesh->groups) {
             glBindVertexArray(g->VAO);
-            //Material* material = getMaterial(g->material());
-            //glBindTexture(GL_TEXTURE_2D, material->tid);
             glDrawArrays(currentObj->renderMode, 0, g->numVertices);
         }
 
@@ -188,13 +184,17 @@ int main() {
             glm::mat4 scaleMatrix = glm::scale(shot->transform, glm::vec3(shot->scaleFactor));
             glm::mat4 modelMatrix = scaleMatrix * shot->transform;
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
+            
+            shot->mesh->min *= shot->direction;
+            shot->mesh->max *= shot->direction;
+            
             // Matriz de translação
             glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), shot->direction * shotSpeed * static_cast<float>(deltaTime));
             shot->transform *= translationMatrix;
-
-            shot->mesh->min *= shot->direction;
-            shot->mesh->max *= shot->direction;
+            
+                        
+            GLuint colorLoc = glGetUniformLocation(shader_programme, "objectColor");
+            glUniform3f(colorLoc, 0.0f, 0.0f, 1.0f);
 
             for (Group* g : shot->mesh->groups) {
                 glBindVertexArray(g->VAO);
@@ -202,7 +202,7 @@ int main() {
             }
 
             if (collisionCheck(currentObj, shot)) {
-                cout << "Colidiu" << endl;
+                
             }
 
             // Verificação de timeout
@@ -216,7 +216,6 @@ int main() {
         }
 
         // Controles
-        // Se possível fazer a câmera mover com o mouse
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPosition += cameraSpeed * cameraFront;
         }
@@ -340,8 +339,9 @@ Obj3D* shoot(glm::vec3& cameraPosition, glm::vec3& cameraFront) {
 
     readVertices(shot);
 
-    mesh->min += cameraPosition;
-    mesh->max += cameraPosition;
+    shot->mesh->min += cameraPosition;
+    shot->mesh->max += cameraPosition;
+
     return shot;
 }
 
@@ -398,7 +398,7 @@ void readVertices(Obj3D* obj) {
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
 
-        GLuint gVertVBO, gTexCoordsVBO, gNormalsVBO;
+        GLuint gVertVBO;
         glGenBuffers(1, &gVertVBO);
         glBindBuffer(GL_ARRAY_BUFFER, gVertVBO);
         glBufferData(GL_ARRAY_BUFFER, (vertices.size() * sizeof(GLfloat)),
@@ -443,7 +443,6 @@ vector<Obj3D*> loadAssets(string pathConfig) {
 
         obj->setRenderMode(stoi(renderMode));
         obj->scaleFactor = stof(scaleFactor);
-
 
         ObjReader objReader;
         string content = objReader.readObjFile(obj->path);
